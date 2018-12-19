@@ -1,0 +1,63 @@
+							         Project Report-2
+							  Debatri Mitra		Nick Ceglia
+							Roll No- 63128512
+
+Note :======= 
+1. Follow the submission requirements (5%) Code is structured as required (e.g., the directory structure)
+    Makefile works
+    Code compiles and links correctly 
+    from command line run->   chmod u+x test.sh 
+    before running ./test.sh project1-StudentID	
+
+
+-------------------------------------------------------------------------------------------------------------
+Objective ==>
+-------------------------------------------------------------------------------------------------------------
+Clearly document the design of your project (internal record format and page format) 
+
+-------------------------------------------------------------------------------------------------------------
+Page Design and Memory Layout  ==>
+-------------------------------------------------------------------------------------------------------------
+The requirement of the project all data written to the database is saved on hard disk. 
+
+------------------------------
+PFM Layer =>
+------------------------------
+Remains same as Project-1.
+------------------------------
+RBFM LAyer =>
+------------------------------
+
+In this Part we changed our Page Design. We split each page in 4 slots. So, record upto size 1024 can be accomodated. This is not the besst solution for space management but much simpler to work with. 
+
+DESIGN SPECS - WHY IT IS NON_SCALABLE => 
+------------------------------
+Every time we create a File we create a Header Page. Each byte of the header page consist of information about 1 page- so no overflow untill we have a file with 4096 page. We do it by using a bitmap where each bit represents one slot in the page. If first 4 bits of byte-1 in header pagereads 0000 means all the slots are empty in page -1 are empty and so on. Thus we keep track of all the slots all the time. 
+However, this was a bad choice for us.
+
+Because, in this manner we can't insert a record of size> 1024 byte. Also, it implied that in one Header PAge we can at max hold 4*4096 slot information i.e. 16396 record information.
+
+This is a trade-off. 
+
+If we chose lesser slots per page and sticked with the bitset based tracking design we would have failed on rbf test cases where we had to insert 10000 records that meant with that design we would have an overflow in header Page.
+
+So, this simplistic design passed us all rbfm cases.
+
+However, when we moved to rm. We faced the problem. In test Case 8 onwards the record size was 2000 which was not handeled in the design.
+As we mentioned- one slot => 1024 bytes in out case.
+Now, an easy fix was to use less number of slots per page but then as we mentioned rbfm tests would fail.
+
+SOLUTION=>
+We will implement a linked list of header page. So, when we overflow a particular page with slod info we go to the next header.
+This way we can have 1 slot per page that can handle upto 4096 byte sized records.
+Now, there will be two problems -1. a lot of space wasted
+2. Say, we are lazy about memory management -still a potential problem would be if record_size > 4096 byte i.e. one record spans over multiple pages.
+
+
+
+
+
+
+    
+   
+

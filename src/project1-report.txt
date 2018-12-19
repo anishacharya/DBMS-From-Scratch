@@ -1,0 +1,58 @@
+							Project Report-1
+							  Debatri Mitra
+							Roll No- 63128512
+
+Note :======= 
+1. Follow the submission requirements (5%) Code is structured as required (e.g., the directory structure)
+    Makefile works
+    Code compiles and links correctly 
+    from command line run->   chmod u+x test.sh 
+    before running ./test.sh project1-StudentID	
+
+
+
+
+-------------------------------------------------------------------------------------------------------------
+Objective ==>
+-------------------------------------------------------------------------------------------------------------
+Clearly document the design of your project (internal record format and page format) 
+
+-------------------------------------------------------------------------------------------------------------
+Page Design and Memory Layout  ==>
+-------------------------------------------------------------------------------------------------------------
+The requirement of the project all data written to the database is saved on hard disk. 
+
+------------------------------
+PFM Layer =>
+------------------------------
+In this part 1 of the bigger Project we implement the lowest layer i.e. the Paged File Manager and some functionalities of the second layer i.e. Record Based File Manager. It is responsible for interating at the page level and page ­sized chunks of bytes are read and written. The interaction with pages is done through a FileHandle instance. All the operations are supported through Pfm Layer. 
+Create File Method checks if there is any file with the filename already if not it will create a new file or it will throw an error stating that the filename already exists. The method Open file and close file checks first if the filename exists or not and if not then it will throw an error else it will open a file / close a file linking to the provided filehandle. Similarly destroy file checks if the file exists if yes then it will erase it from disk.
+Read page method reads data from page to memory chunk. Similarly Write page will write incoming datastream into the page. 
+Append Page simple goes to end of the current file pointed by filehandle and creates a new page at the end of the file. 
+Some utility function is also there which simply counts the number of pages read, write and total number of pages in the file. 
+
+---------------------------------------------------------------------------------------------------------------
+RBF Layer ==>
+---------------------------------------------------------------------------------------------------------------
+In this part of the project we needed to implement some part of Record Based File Manager Layer. This layer adds another level of abstraction on top of the PFM layer.
+Here page level interation is done through the PFM layer only where many method that require to interact in the page level which is done through callinjg pfm methods internally from rbfm. 
+
+Every time we call the createFile method we will create a Header Page. The Design Decision is that to choose 4 bytes at the beginning of the Header Page/ Directory Page to hold the no_of_pages in that File and next 4 bytes are reserved (during first write/read) for holding the number of pages in the file, next 4 bytes will hold the information of how many empty pages are in the file (pages become empty when deletion happens on a certain page) and next 4 bytes subsequently point to the pages with space - if null will imply we need to create a page at the end of the file .  Last 4 bytes are always reserved for the next header file pointer. An header file is added when this header file is filled.   
+The pages are arranged as linked list. Where the first 4 byte points to the next page of the file and the next 4 bytes has the information of amount of free space in the page. There will subsequently be more modifications in the file structure as we move on with the next projects.
+
+Apart from the provided methods some utility methods also have been implemented - one is getbit which is basically used to do bitwise operations. Since, we have to take care of the NULL data.So, it basically lets us look at which bit is set so which field is Null and have to be skipped. 
+Another method record length is implemented which takes in the data stream and calculated the size including the Null Indicationr bytes. Number of Null Bytes is computed using this formula 
+		int null_bytes=ceil(double(fields)/8);
+Another method called available page looks up for the page from the in a linear fashion over the header page i.e. O(n) where n is number of empty pages. This can be improved but the value n is not too large so as of now this structure is pretty efficient. 
+
+Insert Record is implemented taking the null field into consideration. During read record Where if we first read the nullindicator then if we find a null field is there using getbit method then basically we skip that field and output NULL for that field. 
+There is some scalability issues here and will have to be debugged in the subsequent projects.
+
+
+
+
+ 
+   
+
+
+

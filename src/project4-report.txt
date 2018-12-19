@@ -1,0 +1,63 @@
+Project Report-3
+							  Debatri Mitra		Nick Ceglia
+							Roll No- 63128512	Roll No-66847885
+
+
+Note :=======
+1. Follow the submission requirements (5%) Code is structured as required (e.g., the directory structure)
+    Makefile works
+    Code compiles and links correctly
+    from command line run->   chmod u+x test.sh
+    before running ./test.sh project1-StudentID
+
+
+-------------------------------------------------------------------------------------------------------------
+Objective ==>
+-------------------------------------------------------------------------------------------------------------
+Clearly document the design of your project (internal record format and page format)
+
+-------------------------------------------------------------------------------------------------------------
+Page Design and Memory Layout  ==>
+-------------------------------------------------------------------------------------------------------------
+The requirement of the project all data written to the database is saved on hard disk.
+-------------------------------------------------------------------------------------------------------------
+
+PFM LAYER=========>
+-------------------------------------------------------
+Remains Unchanged...
+--------------------------------------------------------
+RBFM =============>
+Remains Unchanged
+--------------------------------------------------------
+RM ===============>
+Here we implemented a wrapper for rm layer to use ix layer.
+Three methods have been implemented -
+createIx, destroyIx, rm_ixScan and an iterator for the scan.
+In create and destroy iX we simply create and destroy an ix file identified by a IXFilehandle for the rm catalog.
+The relational operators are implemented using iterators.
+This allows us to use one operator as input for another.
+The iterator class supports 
+1) getNextTuple: fetch the next tuple from the operator
+2) getAttributes: used to get the attributes for the tuple returned by the operator
+
+
+----------------------------------------------------------
+IX ===============>
+Remains Unchanged
+----------------------------------------------------------
+QE=================>
+The QE layer has been implemented on top of this.
+Project: Gets the next tuple using getnexttuple and then only fetches the attributes that matches the passed attribute list.
+Filter:  will go over the tuples and select only those meeting filter criterion.
+Aggregate: go through each tuple and modify the result based onaggregate operator.
+IndexNestedLoopJoin: get next tuple from right satisfying the join contidion based on appropriate ix on right table. If there are no tuples satisfying this condition, get the next tuple from left and repeat this process.
+..........................................................
+We have encountered some bugs and for some reason many test cases fail.
+goes through linking errors.
+We will debug it over the weekend and look forward to your consideration.
+
+
+
+ 
+
+

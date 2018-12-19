@@ -1,0 +1,75 @@
+Project Report-3
+							  Debatri Mitra		Nick Ceglia
+							Roll No- 63128512	Roll No-66847885
+
+
+Note :=======
+1. Follow the submission requirements (5%) Code is structured as required (e.g., the directory structure)
+    Makefile works
+    Code compiles and links correctly
+    from command line run->   chmod u+x test.sh
+    before running ./test.sh project1-StudentID
+
+
+-------------------------------------------------------------------------------------------------------------
+Objective ==>
+-------------------------------------------------------------------------------------------------------------
+Clearly document the design of your project (internal record format and page format)
+
+-------------------------------------------------------------------------------------------------------------
+Page Design and Memory Layout  ==>
+-------------------------------------------------------------------------------------------------------------
+The requirement of the project all data written to the database is saved on hard disk.
+-------------------------------------------------------------------------------------------------------------
+
+PFM LAYER=========>
+-------------------------------------------------------
+Remains Unchanged...
+--------------------------------------------------------
+
+
+RBF Design========>
+=================================
+
+Each file in the RBF manager layer is initialized with a single header file.  Each header file contains the free space as an integer for every page created to hold data in that file.  There are 1023 locations for holding free space in each file, for each of the 4 byte offsets excluding the final offset.  The final 4 byte offset is used as an overflow indicator.  0 indicates that no additional header files have been constructed and 1 indicates that a header page follows the current header page at its page number plus a known offset calculated from the number of possible pages needed to get to fill an entire header page.  A known marker is  used to denote page offsets that have not been created yet.
+Each page created is actually a set of 2 pages, a data page and a directory of slots.  These are held in known locations calculated from the current header page number and the 4 byte offset from the beginning of the header page.
+    Each directory of slots page is a collection of slots held in 8 byte offsets.  The first 4 bytes are the length of that record, the last 4 bytes are its known offset from the beginning of the page.  Known markers are used to denote slots that are not currently in use.
+    Inserts and deletes keep all the free space in the page at the very end of the file.  Summing all the known lengths for all slots in use for a particular page provides the offset for a new insert.  Free space is updated in the header at each insert and delete.  Deletes shuffle all the data back overwriting the deleted data in the data page and resetting the known offsets for the still in use slots in the directory page.
+    If an update can fit the updated record on the same page, the data is shuffled to provide room at the record offset.  During this shuffle, all of the known offsets for the rest of the slots in use are updated.  The data is then copied into the same offset, and the length is updated in the directory of slots.  If the length of the update can no longer fit on the same page, an insert is issued for the new data.  The slot is set to hold information for 3 integers (12 bytes).  The first is a tombstone, denoting that the a move has taken place.  The next 2 are the RID slot and page numbers returned from the new insert call.  Delete and read operations that encounter this tombstone recursively call back on themselves for the next RID page and slot number.  Updates redirect to the new page and slot number, where it is subsequently possible that another move takes place and an additional tombstone is added.
+    Scan walks through all allocated pages and all allocated slots for each page and finds slots and pages that are in use.  Readattribute method is called to compare the value using the comparison operator to the value of the condition attribute supplied.  All records are considered valid if NO_OP is provided with a condition attribute of “” and a value of NULL.  Tombstones are followed for those records encountered with a tombstone marker.  If we reach an unallocated page, we return an RBFM_EOF.
+
+RM Design==========>
+============================
+
+RM stores each table as an RBF file.  Table ids are calculated from a hash of the table name.  The standard column attributes provided in the project description are stored in the system catalog tables.  To get attributes of a specific table, we call the rbfm scan iterator on the Columns table, requesting the column-name, column-type, and column-length with an EQ_OP comparator comparing the condition attibute “table-id” with the hash of the table name stored in the value parameter.  The system catalog is updated each time a new table is created with the appropriate columns for the provided attributes.  The rm scan iterator calls out the rbfm scan iterator, when this return RBFM_EOF, the rm scan iterator return RM_EOF.  Much of the remaining functions including insert, delete, and update call out to rbfm methods for the table rbfm methods.
+
+Known Problems encountered:
+Records found that were already scanned from a tombstone address, are refound by the scan iterator.  Keeping a record of these encounters is necessary.  Delete record on a tombstoned record did not always seem to function properly, it is unknown the cause.  This last issue effects RM test 12.  There were some additional segmentation faults in the later tests of RM that were unresolved.
+
+
+------------------------------------------------------------
+IX======>
+Here we try to implement a B+ tree structure. Each node is one page with size PAGE_SIZE i.e. 4096 bytes. We initially start with only one node i.e. the root. When it becomed full it is split into two leaf nodes and this becomes the root.
+
+The last 4 bytes of each leaf node stores the amount of free space in the leaf. Our current structue support Var Length record insertion deletion. For each entry we assign 4 bytes to store the length of the Key. In order to get the Key length we wrote a method caled attrlen which gives the length of the key taking into consideration the type of the attribute.
+Then while storing the <key rid> we store 4 byte to keep Key Length, then Key_length space for the key itself. Then 4 bytes for rid.pageNum and then 4 bytes fr the rid.slotNum
+Last 4 bytes are for free space and second last 4 bytes are to keep the current offset.
+While inserting we always keep the barrier as -1 i.e. the key_length field of next record.
+So, when we face a -1 and if no free space we know that it is time for a split.
+Deletion is done efficiently.
+While deleting we keep a tombstone -(Key_Len) behind. So, when skimming through we see a 9999 and we know that there was a key which has been deleted.
+We could not implement the Print B tree method.
+Also, we have something funny going on in pfm file open and read.
+When doing a split and going more than one degree for some reason we are getting segmentation fault.
+When gdb backtracked we figured there must be something wrong with pfm fseek, fclose command usage.
+Due to spending too much time on rm and rbfm improvement we missed some of the details in ix implementation.
+However, we identify and know exact reasons for failing test cases. It is a repeating pattern and one fix in scan will fix all the test cases.
+Whenever the node becomes potentially unstable-i.e. set by the threshold of aavailable space. This is checked in a O(1) manner. We have reserved the last 4 bytes for available space. If offset in the last 4 bytes < Key_len to be inserted we split it beforehand. In case of delete we do take a similar approach - however, we notice a bug while deleting in the root - for some reason it breaks giving segmentation error and when gdb run we get some memory unalignment error . 
+However, we are passing most of the test cases - in case of delete related tests we break- the implementation in delete is serialized which is not desired and we will debug it as soon as possible.
+
+
+
+
+
+
+------------------------------------------------------------
